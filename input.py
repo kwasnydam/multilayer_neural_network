@@ -37,5 +37,11 @@ plt.ylabel('Salary')
 plt.show()
 #print([norm_features.max(), norm_features.min()])
 
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+labelencoder_labels = LabelEncoder()
+labels = labelencoder_labels.fit_transform(labels)
+labels = np.reshape(labels,(-1, 1))
+onehotencoder = OneHotEncoder(categorical_features = [0])
+labels = onehotencoder.fit_transform(labels).toarray()
 
 
