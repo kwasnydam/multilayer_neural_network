@@ -1,4 +1,5 @@
 import numpy as np
+import Synapse
 
 
 class Neuron:
@@ -12,12 +13,12 @@ class Neuron:
     """
 
     def __init__(self, sum=0, delta=0, output=0,
-                 input_synapses=list(), output_synapses=list()):
+                 input_synapses=None, output_synapses=None):
         self.sum = sum
         self.delta = delta
         self.output = output
-        self.input_synapses = input_synapses
-        self.output_synapses = output_synapses
+        self.input_synapses = list()
+        self.output_synapses = list()
 
     @property
     def delta(self):

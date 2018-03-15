@@ -20,13 +20,14 @@ labels = inputData.iloc[1:, 4].values
 print(type(features))
 
 norm_features = features/features.max()             # amplitude normalization
+'''
 plt.figure(1)
 plt.scatter(norm_features[:, 0], norm_features[:, 1], color = 'red')
 #plt.plot(X_train, regressor.predict(X_train), color = 'blue')
 plt.title('Salary vs Experience (Training set)')
 plt.xlabel('Years of Experience')
 plt.ylabel('Salary')
-plt.show()
+plt.draw()
 
 plt.figure(2)
 plt.scatter(norm_features[:, 2], norm_features[:, 3], color = 'red')
@@ -34,8 +35,11 @@ plt.scatter(norm_features[:, 2], norm_features[:, 3], color = 'red')
 plt.title('Salary vs Experience (Training set)')
 plt.xlabel('Years of Experience')
 plt.ylabel('Salary')
-plt.show()
+plt.draw()
 #print([norm_features.max(), norm_features.min()])
+
+print('W tym momencie wykresy powinny być gotowe')
+plt.show()'''
 
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 labelencoder_labels = LabelEncoder()
@@ -43,5 +47,32 @@ labels = labelencoder_labels.fit_transform(labels)
 labels = np.reshape(labels,(-1, 1))
 onehotencoder = OneHotEncoder(categorical_features = [0])
 labels = onehotencoder.fit_transform(labels).toarray()
+
+import neuron_network as NN
+
+myNN = NN.NeuronNetwork()
+myNN.create_network(3, [10, 5, 3])
+
+print('Utworzono siec')
+
+myNN.training_input = norm_features
+myNN.training_output = labels
+
+print('dodano dane')
+
+myNN.initialize_network()
+
+print('Initialized the network for training')
+# WOWOWOWOWOWOW IT IS WORKING SO FAR, DAMNNN
+#
+# tbh, I am genuinely surprised
+# lets go further then, to the moon and beyond!
+
+
+
+
+
+
+
 
 
