@@ -124,20 +124,34 @@ class NeuronNetwork:
             print("Missing Input or Output data")
 
     class Trainer:
-        def __init__(self, network):
+        THRESHOLD = 0.001
+        def __init__(self, network, max_iter):
             self.network = network
             self.training_size = len(self.network.training_input[:, 1])
             self.training_output = []
+            self.previous_error = 9999
+            self.max_iter = max_iter
             self._set_initial_training_parameters()
+
+        def _set_initial_training_parameters(self):
+            self.error = [0]*self.training_size
+            self.iteration = 0
 
         def train(self):
             #self.set_initial_training_parameters()
-            for sample_in, sample_out in self.network.training_input, self.network.training_output:
-                self._connect_inputs(sample_in)
-                self._propagate_forward()
-                self._calculate_error(sample_out)
-                self._propagate_back()
-
+            while self.iteration < self.max_iter:
+                for sample_in, sample_out in self.network.training_input, self.network.training_output:
+                    self._connect_inputs(sample_in)
+                    self._propagate_forward()
+                    self._calculate_error(sample_out)
+                    self._propagate_back()
+                if self._is_finish_criterium_met():
+                    break
+                else:
+                    self._caluclate_average_adjustment()
+                    self._save_current_error()
+                    self._clear_training_process_parameters()
+                    self._increase_iteration()
 
         def _connect_inputs(self, sample):
             for i_neuron in self.network.neuron_layers_list[0]:
@@ -160,10 +174,6 @@ class NeuronNetwork:
             self.error.append(error)
             self.training_output.append([output_layer[i].output for i in range(len(output_layer))])
 
-        def _set_initial_training_parameters(self):
-            self.error = [0]*self.training_size
-            self.iteration = 0
-
         def _propagate_back(self):
             for layer in reversed(self.network.neuron_layers_list):
                 for neuron in layer:
@@ -174,6 +184,30 @@ class NeuronNetwork:
                         if type(input_synapse.input) is Neroun.Neuron:
                             delta = neuron.delta * input_synapse.weight * (1 - neuron.output) * neuron.output
                             input_synapse.input.delta += delta
+
+        def _is_finish_criterium_met(self):
+            _state = (self.previous_error - (sum(self.error)/len(self.error))) < Trainer.THRESHOLD
+            self.previous_error = sum(self.error)/len(self.error)
+            return _state
+
+        def _caluclate_average_adjustment(self):
+            # print("caluclate_average__adjustment: Hello there")
+            for layer in self.network.neuron_layers_list:
+                for neuron in layer:
+                    for input_synapse in neuron.input_synapses:
+                        _adjustement = sum(input_synapse.weight_adjustment) / len(input_synapse.weight_adjustment)
+                        input_synapse.weight += _adjustement
+                        input_synapse.weight_adjustment = []
+
+        def _clear_training_process_parameters(self):
+            self.error = [0] * (len(self.training_input[:, 1]))
+            self.network.network_output = []
+
+        def _save_current_error(self):
+            self.previous_error = sum(self.error) / len(self.error)
+
+        def _increase_iteration(self):
+            self.iteration += 1
 
     def train(self):
         k = 0
