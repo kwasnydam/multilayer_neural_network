@@ -21,7 +21,6 @@ labels = inputData.iloc[1:, 4].values                           # extract class 
 print(type(features))
 
 from sklearn.preprocessing import normalize
-#norm_features = np.array([features[:, i]/features[:, i].max() for i in range(len(features[1,:]))])             # amplitude normalization
 norm_features = normalize(features, axis=0, norm='max')
 
 '''
@@ -72,58 +71,18 @@ print('Initialized the network for training')
 # tbh, I am genuinely surprised
 # lets go further then, to the moon and beyond!
 
-myNN.train()
+myNN.train_network()
+training_results = np.array(myNN.trainer.training_output)
+#with open('training_results.npy', mode='a', encoding = 'utf-8') as myFile:
+#np.save('myFile', training_results)
+
+#with open('training_results.npy', mode='r', encoding = 'utf-8') as myFile:
+#loaded_results = np.load('myFile.npy')
+
+myNN.trainer._compare_results_with_training_labels()
 
 print("Trained the network, wohooooo")
 
-'''
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-import plotly.graph_objs as go
-
-
-app = dash.Dash()
-
-app.layout = html.Div([
-    dcc.Graph(id='graph-with-slider'),
-    dcc.Slider(
-        id='year-slider',
-        min=df['year'].min(),
-        max=df['year'].max(),
-        value=df['year'].min(),
-        step=None,
-        marks={str(year): str(year) for year in df['year'].unique()}
-    )
-])
-
-
-@app.callback(
-    dash.dependencies.Output('graph-with-slider', 'figure'),
-    [dash.dependencies.Input('year-slider', 'value')])
-def update_figure(selected_year):
-    traces = []
-    traces.append(go.Scatter(
-        x=features[:,1],
-        y=features[:, 2],
-        mode='markers',
-        opacity=0.7,
-        marker={
-            'size': 15,
-            'line': {'width': 0.5, 'color': 'white'}
-        },
-        name=1
-    ))
-    return {
-        'data': traces,
-        'layout': go.Layout(
-            hovermode='closest'
-        )
-    }'''
-
-
-'''if __name__ == '__main__':
-    app.run_server()'''
 
 
 

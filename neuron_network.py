@@ -29,7 +29,6 @@ class NeuronNetwork:
         self.input_layer = None         #: I think it is generally unused
         self.miu = NeuronNetwork.MIU    # The rate of learning parameter
         self.network_output = []        #: Classification results of our neuron network
-        self.trainer = NeuronNetwork.Trainer(self)  #: This object is responsible for training of the network
 
     @property
     def neuron_layers_list(self):
@@ -112,7 +111,7 @@ class NeuronNetwork:
         :param _training_output:
         """
         self.training_input = _training_input
-        self_training_output = _training_output
+        self.training_output = _training_output
         if self.training_input is not None and self.training_output is not None:
             #: Connect the input layer's neurons with the input data
             for i_neuron in self.neuron_layers_list[0]:
@@ -123,8 +122,12 @@ class NeuronNetwork:
         else:
             print("Missing Input or Output data")
 
+    def train_network(self):
+        self.trainer = NeuronNetwork.Trainer(self, 1024)  #: This object is responsible for training of the network
+        self.trainer.train()
+
     class Trainer:
-        THRESHOLD = 0.001
+        THRESHOLD = 0.00001
         def __init__(self, network, max_iter):
             self.network = network
             self.training_size = len(self.network.training_input[:, 1])
@@ -140,7 +143,7 @@ class NeuronNetwork:
         def train(self):
             #self.set_initial_training_parameters()
             while self.iteration < self.max_iter:
-                for sample_in, sample_out in self.network.training_input, self.network.training_output:
+                for sample_in, sample_out in zip(self.network.training_input, self.network.training_output):
                     self._connect_inputs(sample_in)
                     self._propagate_forward()
                     self._calculate_error(sample_out)
@@ -186,7 +189,7 @@ class NeuronNetwork:
                             input_synapse.input.delta += delta
 
         def _is_finish_criterium_met(self):
-            _state = (self.previous_error - (sum(self.error)/len(self.error))) < Trainer.THRESHOLD
+            _state = (self.previous_error - (sum(self.error)/len(self.error))) < type(self).THRESHOLD
             self.previous_error = sum(self.error)/len(self.error)
             return _state
 
@@ -200,15 +203,44 @@ class NeuronNetwork:
                         input_synapse.weight_adjustment = []
 
         def _clear_training_process_parameters(self):
-            self.error = [0] * (len(self.training_input[:, 1]))
-            self.network.network_output = []
+            self.error = [0] * self.training_size
+            if self.iteration < self.max_iter-1:
+                self.training_output = []
 
         def _save_current_error(self):
             self.previous_error = sum(self.error) / len(self.error)
 
         def _increase_iteration(self):
+            print(str(self.iteration))
             self.iteration += 1
 
+        def _compare_results_with_training_labels(self):
+            results = self.training_output
+            reference = self.network.training_output
+            normalized_result = []
+            for result in results:
+                if result[0]==max(result):
+                    normalized_result.append([1, 0, 0])
+
+                elif result[1] == max(result):
+                    normalized_result.append([0, 1, 0])
+                else:
+                    normalized_result.append([0, 0, 1])
+
+            normalized_result = np.array(normalized_result)
+            wynik = []
+            for row_train, row_ref in zip(normalized_result, reference):
+                if np.array_equal(row_ref, row_train):
+                    wynik.append(1)
+                else:
+                    wynik.append(0)
+            wynik = np.array(wynik).reshape((-1, 1))
+            self.accuracy = sum(wynik)/len(wynik)
+            print('Accuracy is: '.format(str()self.accuracy))
+
+
+
+'''
     def train(self):
         k = 0
         error = [0]*(len(self.training_input[:, 1]))
@@ -263,7 +295,7 @@ class NeuronNetwork:
                 for input_synapse in neuron.input_synapses:
                     _adjustement = sum(input_synapse.weight_adjustment)/len(input_synapse.weight_adjustment)
                     input_synapse.weight += _adjustement
-                    input_synapse.weight_adjustment = []
+                    input_synapse.weight_adjustment = []'''
 
 
 
