@@ -87,3 +87,5 @@ print("Trained the network, wohooooo")
 
 
 
+
+

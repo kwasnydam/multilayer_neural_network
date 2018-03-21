@@ -107,8 +107,8 @@ class NeuronNetwork:
 
     def initialize_network(self, _training_input, _training_output):
         """Initialze the network with an input and output data to be trained on
-        :param _training_input:
-        :param _training_output:
+        :param _training_input: training feature array
+        :param _training_output:training reference labels(classes
         """
         self.training_input = _training_input
         self.training_output = _training_output
@@ -126,42 +126,75 @@ class NeuronNetwork:
         self.trainer = NeuronNetwork.Trainer(self, 1024)  #: This object is responsible for training of the network
         self.trainer.train()
 
+    def get_trained_model_parameters(self):
+        output = []
+        for layer in self.neuron_layers_list:
+            _l = []
+            for neuron in layer:
+                _n = []
+                for synapse in neuron.input_synapses:
+                    _n.append(synapse.weight)
+                _l.append(_n)
+            output.append(_l)
+        return output
+
+
     class Trainer:
+        '''An inner class that is responsible for the training of Neural Network.
+        Performs Backpropagation algorithm to adjust the parameters
+        '''
         THRESHOLD = 0.00001
         def __init__(self, network, max_iter):
-            self.network = network
-            self.training_size = len(self.network.training_input[:, 1])
-            self.training_output = []
-            self.previous_error = 9999
-            self.max_iter = max_iter
+            """Creates the Trainer object with reference to the neuron network and a max number of iterations
+
+            Attributes:
+            :param network:     :obj:'NeuronNetwork' reference to the NeuronNetwork object
+            :param max_iter:    :obj:'int' number of iterations to train the network
+            """
+            self.network = network      # Reference to the NeuronNetwork object
+            self.training_size = len(self.network.training_input[:, 1]) # size of training data (number of samples)
+            self.training_output = []   # Predicted labels
+            self.previous_error = 9999  # Initial error
+            self.max_iter = max_iter    # number of training iterations
             self._set_initial_training_parameters()
 
         def _set_initial_training_parameters(self):
+            """Zero out the error and set the current iteration to be equal 0"""
             self.error = [0]*self.training_size
             self.iteration = 0
 
         def train(self):
+            """Perform the backpropagation algorithm to train the network. Finish criterium is:
+            1. Error adjustement in consequetive iterations below given THRESHOLD
+            2. Reached maximum number of iterations
+            """
             #self.set_initial_training_parameters()
             while self.iteration < self.max_iter:
+                # in each iteration
                 for sample_in, sample_out in zip(self.network.training_input, self.network.training_output):
+                    # Calculate error and weight adjustements for every sample in input data
                     self._connect_inputs(sample_in)
                     self._propagate_forward()
                     self._calculate_error(sample_out)
                     self._propagate_back()
                 if self._is_finish_criterium_met():
+                    # if the error difference in the current iteration is lower then threshol, break cause minimum reached
                     break
                 else:
+                    # Else calculate network's parameters' adjustements and restart the state
                     self._caluclate_average_adjustment()
                     self._save_current_error()
                     self._clear_training_process_parameters()
                     self._increase_iteration()
 
         def _connect_inputs(self, sample):
+            """Feed the current input sample to the netowrk"""
             for i_neuron in self.network.neuron_layers_list[0]:
                 for index in range(len(sample)):
                     i_neuron.input_synapses[index].input = sample[index]
 
         def _propagate_forward(self):
+            """Forward propagation phase. Based on current parameters the output is being calculated"""
             for layer in self.network.neuron_layers_list:
                 for neuron in layer:
                     neuron.calc_sum()     # calc_sum -> for inp in self.in_syn: self.sum += inp.val*inp.weight
@@ -169,6 +202,7 @@ class NeuronNetwork:
                     neuron.delta = 0
 
         def _calculate_error(self, output):
+            """Calculate the difference between reference, real labels and the calculated outputs of the network"""
             output_layer = self.network.neuron_layers_list[-1]
             error = 0
             for i in range(len(output_layer)):
@@ -178,6 +212,9 @@ class NeuronNetwork:
             self.training_output.append([output_layer[i].output for i in range(len(output_layer))])
 
         def _propagate_back(self):
+            """Backpropagation of errors using backpropagation algorithm. Adjustements of weigths for the current sample
+            are stpred in the synapse and averaged across all samples when running out of data
+            """
             for layer in reversed(self.network.neuron_layers_list):
                 for neuron in layer:
                     for input_synapse in neuron.input_synapses:
@@ -189,11 +226,16 @@ class NeuronNetwork:
                             input_synapse.input.delta += delta
 
         def _is_finish_criterium_met(self):
+            """Checks whether the error adjustement is lower then the threshold
+
+            :return: True if error adjustement lower then THRESHOLD, false otherwise
+            """
             _state = (self.previous_error - (sum(self.error)/len(self.error))) < type(self).THRESHOLD
             self.previous_error = sum(self.error)/len(self.error)
             return _state
 
         def _caluclate_average_adjustment(self):
+            """Average obtained weight adjustements and adjust weights accordingly. Clear list of adjustement for next iteration"""
             # print("caluclate_average__adjustment: Hello there")
             for layer in self.network.neuron_layers_list:
                 for neuron in layer:
@@ -203,11 +245,13 @@ class NeuronNetwork:
                         input_synapse.weight_adjustment = []
 
         def _clear_training_process_parameters(self):
+            """Clears the temporary parameters for next iteration"""
             self.error = [0] * self.training_size
             if self.iteration < self.max_iter-1:
                 self.training_output = []
 
         def _save_current_error(self):
+            """Saves current error or comparison in the next itearation"""
             self.previous_error = sum(self.error) / len(self.error)
 
         def _increase_iteration(self):
@@ -215,6 +259,7 @@ class NeuronNetwork:
             self.iteration += 1
 
         def _compare_results_with_training_labels(self):
+            # IT SHOULD GO TO THE CROSSVALIDATION CLASS
             results = self.training_output
             reference = self.network.training_output
             normalized_result = []
@@ -237,7 +282,6 @@ class NeuronNetwork:
             wynik = np.array(wynik).reshape((-1, 1))
             self.accuracy = sum(wynik)/len(wynik)
             print('Accuracy is: '.format(str()self.accuracy))
-
 
 
 '''
