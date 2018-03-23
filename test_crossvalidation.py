@@ -9,12 +9,13 @@ class TestCrossvalidation(TestCase):
     def setUp(self):
         self.filename = './IrisDataTrain.xls'
         self.data = DataHolder(self.filename, 4)
-        self
         self.model = NeuronNetwork()
+        self.model.create_network(2, [4, 3])
         self.crossvali = Crossvalidation()
         self.crossvali.set_data(self.data)
         self.crossvali.set_parameters(5)
         self.crossvali.generate_validation_training_sets()
+        self.crossvali.model = self.model
         self.data.encode_labels()
         self.data.normalize_features()
 

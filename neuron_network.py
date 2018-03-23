@@ -122,24 +122,21 @@ class NeuronNetwork:
         else:
             print("Missing Input or Output data")
 
+    def train(self, _training_features, _training_labels):
+        self.initialize_network(_training_features, _training_labels)
+        self.train_network()
+
     def train_network(self):
-        self.trainer = NeuronNetwork.Trainer(self, 1024)  #: This object is responsible for training of the network
+        self.trainer = NeuronNetwork.Trainer(self, 16)  #: This object is responsible for training of the network
         self.trainer.train()
 
-    def normalize_output(self):
-        normalized_results = []
-        for result in self.training_output:
-            max_val = 0
-            result_row = [0 for i in range(len(result))]
-            for i in range(len(result)):
-                if result[i] > max_val:
-                    max_val = result[i]
-                    max_val_index = i
-            result_row[max_val_index] = 1
-            normalized_results.append(result_row)
-        self.output = normalized_results
+    def predict(self, features):
+        predictor = NeuronNetwork.Predictor(self, features)
+        results = predictor.predict()
+        return results
 
-    def get_trained_model_parameters(self):
+    def get_parameters(self):
+        """It is intended to return a list of layers containing list of neurons containg list of synapses weights"""
         output = []
         for layer in self.neuron_layers_list:
             _l = []
@@ -151,11 +148,21 @@ class NeuronNetwork:
             output.append(_l)
         return output
 
+    def reset(self):
+        # Reseting weights
+        for layer in self.neuron_layers_list:
+            for neuron in layer:
+                for synapse in neuron.input_synapses:
+                    synapse.reset()
+        # breaking the connection to the inputs (it is reasonable because number of inputs may be different)
+        for neuron in self.neuron_layers_list[0]:
+            neuron.input_synapses = []
+
 
     class Trainer:
-        '''An inner class that is responsible for the training of Neural Network.
+        """An inner class that is responsible for the training of Neural Network.
         Performs Backpropagation algorithm to adjust the parameters
-        '''
+        """
         THRESHOLD = 0.00001
         def __init__(self, network, max_iter):
             """Creates the Trainer object with reference to the neuron network and a max number of iterations
@@ -167,7 +174,6 @@ class NeuronNetwork:
             self.network = network      # Reference to the NeuronNetwork object
             self.training_size = len(self.network.training_input[:, 1]) # size of training data (number of samples)
             self.training_output = []   # Predicted labels
-            self.previous_error = 9999  # Initial error
             self.max_iter = max_iter    # number of training iterations
             self._set_initial_training_parameters()
 
@@ -175,6 +181,7 @@ class NeuronNetwork:
             """Zero out the error and set the current iteration to be equal 0"""
             self.error = [0]*self.training_size
             self.iteration = 0
+            self.previous_error = 9999  # Initial error
 
         def train(self):
             """Perform the backpropagation algorithm to train the network. Finish criterium is:
@@ -268,8 +275,59 @@ class NeuronNetwork:
             self.previous_error = sum(self.error) / len(self.error)
 
         def _increase_iteration(self):
-            print(str(self.iteration))
+            #print(str(self.iteration))
             self.iteration += 1
+
+    class Predictor():
+
+        def __init__(self, model, data):
+            self.network = model
+            self.data = data
+            self.prediction = []
+
+        def predict(self):
+            for sample in self.data:
+                # Predict output based on the input
+                self._connect_inputs(sample)
+                self._propagate_forward()
+                self._save_results()
+            self.output = self._normalize_results()
+            return self.output
+
+        def _connect_inputs(self, sample):
+            """Feed the current input sample to the network"""
+            for i_neuron in self.network.neuron_layers_list[0]:
+                for index in range(len(sample)):
+                    i_neuron.input_synapses[index].input = sample[index]
+
+        def _propagate_forward(self):
+            """Forward propagation phase. Based on current parameters the output is being calculated"""
+            for layer in self.network.neuron_layers_list:
+                for neuron in layer:
+                    neuron.calc_sum()     # calc_sum -> for inp in self.in_syn: self.sum += inp.val*inp.weight
+                    neuron.calc_output()  # sigmoidal function of the sum
+                    neuron.delta = 0
+
+        def _save_results(self):
+            """Append the result of the current predciton to the predicitions list"""
+            output_layer = self.network.neuron_layers_list[-1]
+            self.prediction.append([output_layer[i].output for i in range(len(output_layer))])
+
+        def _normalize_results(self):
+            normalized_results = []
+            for result in self.prediction:
+                max_val = 0
+                result_row = [0 for i in range(len(result))]
+                for i in range(len(result)):
+                    if result[i] > max_val:
+                        max_val = result[i]
+                        max_val_index = i
+                result_row[max_val_index] = 1
+                normalized_results.append(result_row)
+            return normalized_results
+
+
+
 
         '''def _compare_results_with_training_labels(self):
             # IT SHOULD GO TO THE CROSSVALIDATION CLASS

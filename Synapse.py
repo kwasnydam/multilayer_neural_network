@@ -18,3 +18,6 @@ class Synapse:
         else:
             return self.input
 
+    def reset(self):
+        self.weight = (np.random.rand())
+
