@@ -126,6 +126,19 @@ class NeuronNetwork:
         self.trainer = NeuronNetwork.Trainer(self, 1024)  #: This object is responsible for training of the network
         self.trainer.train()
 
+    def normalize_output(self):
+        normalized_results = []
+        for result in self.training_output:
+            max_val = 0
+            result_row = [0 for i in range(len(result))]
+            for i in range(len(result)):
+                if result[i] > max_val:
+                    max_val = result[i]
+                    max_val_index = i
+            result_row[max_val_index] = 1
+            normalized_results.append(result_row)
+        self.output = normalized_results
+
     def get_trained_model_parameters(self):
         output = []
         for layer in self.neuron_layers_list:
@@ -258,7 +271,7 @@ class NeuronNetwork:
             print(str(self.iteration))
             self.iteration += 1
 
-        def _compare_results_with_training_labels(self):
+        '''def _compare_results_with_training_labels(self):
             # IT SHOULD GO TO THE CROSSVALIDATION CLASS
             results = self.training_output
             reference = self.network.training_output
@@ -281,7 +294,7 @@ class NeuronNetwork:
                     wynik.append(0)
             wynik = np.array(wynik).reshape((-1, 1))
             self.accuracy = sum(wynik)/len(wynik)
-            print('Accuracy is: '.format(str()self.accuracy))
+            print('Accuracy is: '.format(str()self.accuracy))'''
 
 
 '''
