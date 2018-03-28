@@ -93,7 +93,7 @@ class Crossvalidation(ICrossvalidation):
         print('Accuracy is: '.format(str(self.accuracy)))
         return self.accuracy
 
-    def avg_parameters(self):
+    '''def avg_parameters(self):
         averaged_parameters = []
         #for parameters_collection in self.__trained_model_parameters:
         for i in range(len(self.__trained_model_parameters[0])):
@@ -105,7 +105,7 @@ class Crossvalidation(ICrossvalidation):
                     for synapse in self.__trained_model_parameters[k][i][j]:
                         average_weight[k].append(self.__trained_model_parameters[k][i][j])
                 average_weight_values = [sum(average_weight[k])/len(average_weight[k]) for k in range(len(self.__trained_model_parameters))]
-                _l.append(average_weight_values)
+                _l.append(average_weight_values)'''
 
 
 
