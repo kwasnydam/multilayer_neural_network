@@ -38,6 +38,7 @@ class Crossvalidation(ICrossvalidation):
         self.model = _model
         self.__trained_model_parameters = []
         self.accuracy_list=[]
+        self.accuracy = 0
 
     def set_parameters(self, _folds):
         self.folds = _folds
@@ -61,21 +62,28 @@ class Crossvalidation(ICrossvalidation):
         for [train, test], i in zip(self.folds_indexes, range(self.folds)):
             train_features, train_labels = self.__get_features_and_labels(train)
             test_features, test_labels = self.__get_features_and_labels(test)
-            self.model.train(train_features, train_labels)
-            self.test_trained_model(test_features, test_labels)
-            self.__trained_model_parameters.append(self.model.get_parameters())
             self.model.reset()
+            self.model.train(train_features, train_labels)
+            is_model_better =  self.test_trained_model(test_features, test_labels)
+            if is_model_better:
+                self.__trained_model_parameters = self.model.get_parameters()
             #self.model.train_network()
             #self._compare_results_with_training_labels(labels)
             #self.__trained_model_parameters.append(self.__get_parameters_from_model(self.model))
-        self.avg_parameters()
-        # self.get_trained_model()
+        self.model.set_parameters(self.__trained_model_parameters)
+        self.test_trained_model(self.data.get_features(), self.data.get_labels())
+        return self.model
 
     def test_trained_model(self, test_features, test_labels):
         prediction = self.model.predict(test_features)
         accuracy = self.compare(prediction, test_labels)
-        self.accuracy_list.append(accuracy)
+        #self.accuracy_list.append(accuracy)
         print(str(accuracy))
+        if accuracy > self.accuracy:
+            self.accuracy = accuracy
+            return True
+        else:
+            return False
 
     def __get_features_and_labels(self, _iteration):
         return [self.data.get_features()[_iteration], self.data.get_labels()[_iteration]]
@@ -89,9 +97,8 @@ class Crossvalidation(ICrossvalidation):
             else:
                 comparison_table.append(0)
         comparison_table = np.array(comparison_table).reshape((-1, 1))
-        self.accuracy = sum(comparison_table) / len(comparison_table)
-        print('Accuracy is: '.format(str(self.accuracy)))
-        return self.accuracy
+        accuracy = sum(comparison_table) / len(comparison_table)
+        return accuracy
 
     '''def avg_parameters(self):
         averaged_parameters = []
@@ -105,13 +112,11 @@ class Crossvalidation(ICrossvalidation):
                     for synapse in self.__trained_model_parameters[k][i][j]:
                         average_weight[k].append(self.__trained_model_parameters[k][i][j])
                 average_weight_values = [sum(average_weight[k])/len(average_weight[k]) for k in range(len(self.__trained_model_parameters))]
-                _l.append(average_weight_values)'''
-
-
-
-
-
-       print('bk')
+                _l.append(average_weight_values)
+        for param_list in self.__trained_model_parameters:
+            for layer in param_list:
+                for neuron in layer:
+                    for synapse_weight in neuron:'''
 
 
 

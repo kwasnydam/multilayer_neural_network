@@ -127,7 +127,7 @@ class NeuronNetwork:
         self.train_network()
 
     def train_network(self):
-        self.trainer = NeuronNetwork.Trainer(self, 16)  #: This object is responsible for training of the network
+        self.trainer = NeuronNetwork.Trainer(self, 1024)  #: This object is responsible for training of the network
         self.trainer.train()
 
     def predict(self, features):
@@ -147,6 +147,12 @@ class NeuronNetwork:
                 _l.append(_n)
             output.append(_l)
         return output
+
+    def set_parameters(self, parameters):
+        for network_layer, parameter_layer in zip(self.neuron_layers_list, parameters):
+            for neuron_layer, parameter_neuron in zip(network_layer, parameter_layer):
+                for synapse, synapse_weight in zip(neuron_layer.input_synapses, parameter_neuron):
+                    synapse.weight = synapse_weight
 
     def reset(self):
         # Reseting weights
