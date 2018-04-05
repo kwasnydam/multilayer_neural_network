@@ -258,7 +258,8 @@ class NeuronNetwork:
             """
             _state = (self.previous_error - (sum(self.error)/len(self.error))) < type(self).THRESHOLD
             self.previous_error = sum(self.error)/len(self.error)
-            return _state
+            #return _state
+            return False
 
         def _caluclate_average_adjustment(self):
             """Average obtained weight adjustements and adjust weights accordingly. Clear list of adjustement for next iteration"""
