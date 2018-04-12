@@ -10,7 +10,7 @@ class TestCrossvalidation(TestCase):
         self.filename = './IrisDataTrain.xls'
         self.data = DataHolder(self.filename, 4)
         self.model = NeuronNetwork()
-        self.model.create_network(3, [4, 20, 3])
+        self.model.create_network(2, [8, 3])
         self.crossvali = Crossvalidation()
         self.crossvali.set_data(self.data)
         self.crossvali.set_parameters(5)

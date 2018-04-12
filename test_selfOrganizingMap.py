@@ -6,7 +6,7 @@ from DataHolder import DataHolder
 class TestSelfOrganizingMap(TestCase):
 
     def setUp(self):
-        self.tested_object = SelfOrganizingMap([5, 5])
+        self.tested_object = SelfOrganizingMap([4, 4])
         self.data = DataHolder(_filename='./IrisDataTrain.xls', _number_of_fetures=4)
         self.data.normalize_features()
         self.data.encode_labels()

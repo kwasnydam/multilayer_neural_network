@@ -31,14 +31,24 @@ class SOMNeuron:
         #print('Distance between weights and input is: ' + str(self.distance))
 
     def calculate_color(self):
-        if sum(self.winners)>0:
-            winners = self.winners
-            self.color = [winners[0]*(1/sum(winners)),
-                          winners[1]*(1/sum(winners)),
-                          winners[2]*(1/sum(winners))]
+        # if sum(self.winners)>0:
+        #     winners = self.winners
+        #     self.color = [winners[0]*(1/sum(winners)),
+        #                   winners[1]*(1/sum(winners)),
+        #                   winners[2]*(1/sum(winners))]
+        # else:
+        #     self.color=[0,0,0]
+        #     #print('Couldnt calculate color: no data in self.winners')
+        winners = self.winners
+        if max(winners) == 0:
+            self.color = -2
+            return
+        if winners[0] == max(winners):
+            self.color = -1
+        elif winners[1] == max(winners):
+            self.color = 0
         else:
-            self.color=[0,0,0]
-            #print('Couldnt calculate color: no data in self.winners')
+            self.color = 1
 
     def adapt_weights(self, distance_to_winner_coeff, adapt_coeff):
         #distance_coeff = self._calculate_distance_coeff()
