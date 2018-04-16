@@ -44,9 +44,14 @@ class SelfOrganizingMap:
     def set_input_range(self, range):
         self.input_value_range = range
 
-    def run(self, data, labels):
+    def train(self, data, labels):
         self.trainer = SelfOrganizingMap.Trainer(self, data, labels)
         self.trainer.train()
+
+    def predict(self, data):
+        self.predictor = SelfOrganizingMap.Predictor(self)
+        self.predictor.predict(data)
+
 
     class Trainer:
         def __init__(self, model, training_data, labels_for_presentation):
@@ -64,14 +69,6 @@ class SelfOrganizingMap:
             map = self.model.map
             initialize_weight = lambda x: x.initialize(self.model.len)
             [initialize_weight(node) for node in self.__get_map_element(map, dim)]
-            # if len(dim) > 3:
-            #     print('SelfOrganizingMap.Trainer.initialize_weights: ERROR - bad dimensions, sholud never get here')
-            # elif len(dim) == 2:
-            #     for x, y in itertools.product(range(dim[0]), range(dim[1])):
-            #         map[x, y].initialize(self.model.len)
-            # else:
-            #     for x, y, z in itertools.product(range(dim[0]), range(dim[1]), range(dim[2])):
-            #         map[x, y, z].initialize(self.model.len)
 
         def __get_map_element(self, map, dimension, get_index=False):
             '''
@@ -175,19 +172,37 @@ class SelfOrganizingMap:
         def __init__(self, model):
             self.model = model
 
+        def __get_map_element(self, map, dimension, get_index=False):
+            '''
+            Generator function that yields map elements
+            :param map:         the map which elements should be returned
+            :param dimension:   array-like with dimensions of the map, indexed with []
+            :param get_index:   if True, the function return a tuple (node, coordinates of the node in the map)
+            :return: yields node elements
+            '''
+            if len(dimension) > 3:
+                print('SelfOrganizingMap.Trainer.initialize_weights: ERROR - bad dimensions, sholud never get here')
+            elif len(dimension) == 2:
+                for x, y in itertools.product(range(dimension[0]), range(dimension[1])):
+                    if not get_index:
+                        yield map[x, y]
+                    else:
+                        yield {'node': map[x,y], 'index': tuple([x, y])}
+            else:
+                for x, y, z in itertools.product(range(dimension[0]), range(dimension[1]), range(dimension[2])):
+                    if not get_index:
+                        yield map[x, y, z]
+                    else:
+                        yield {'node': map[x,y, z], 'index': tuple([x, y, z])}
+
+        def _calc_distances(self, sample):
+            """Calculates distance from the input vector for every node"""
+            map = self.model.map
+            calc_distance = lambda x: x.calculate_distance_from_sample(sample)
+            [calc_distance(node) for node in self.__get_map_element(map, self.model.dimensions)]
+
+
         def predict(self, data):
+            self._calc_distances(data)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            ############### FOR SCIENCE ################

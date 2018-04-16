@@ -54,7 +54,7 @@ class DataHolder:
         if not self.are_features_normalized:
             return self.features
         else:
-            return self.normalized_features
+                return self.normalized_features
 
 
     def set_labels(self):
