@@ -22,6 +22,7 @@ class SelfOrganizingMap:
             if dimensions:
                 self.dimensions = dimensions
                 self.map = np.array(self._initialize(self.dimensions))
+                self.is_trained=False
             else:
                 raise Exception('Creation error: dimensions badly specified\n')
         except Exception as e:
@@ -47,10 +48,21 @@ class SelfOrganizingMap:
     def train(self, data, labels):
         self.trainer = SelfOrganizingMap.Trainer(self, data, labels)
         self.trainer.train()
+        self.is_trained = True
 
     def predict(self, data):
         self.predictor = SelfOrganizingMap.Predictor(self)
         self.predictor.predict(data)
+
+    def get_element(self):
+        if len(self.dimensions) > 3:
+            print('SelfOrganizingMap.Trainer.initialize_weights: ERROR - bad dimensions, sholud never get here')
+        elif len(self.dimensions) == 2:
+            for x, y in itertools.product(range(self.dimensions[0]), range(self.dimensions[1])):
+                yield self.map[x, y]
+        else:
+            for x, y, z in itertools.product(range(self.dimensions[0]), range(self.dimensions[1]), range(self.dimensions[2])):
+                yield self.map[x, y, z]
 
 
     class Trainer:
@@ -97,8 +109,8 @@ class SelfOrganizingMap:
             iter_count = 0
             update_radius= 1
             update_rate = 1
-            #for i in range(200):
-            while True:
+            for i in range(200):
+            #while True:
                 iter_count += 1
                 update_radius = self.__initial_update_radius*np.exp(-(iter_count/self.__narrowing_constant))
                 update_rate = self.__initial_update_rate*np.exp(-(iter_count/self.__narrowing_constant))
@@ -108,6 +120,7 @@ class SelfOrganizingMap:
                     self.model.map[winner_coordinates].winners += label
                     self.adjust_weights(winner_coordinates, update_radius, update_rate)
                 self.calc_colors()
+                #if not i%10:
                 self.show_grid()
 
         def calc_distances(self, sample):
