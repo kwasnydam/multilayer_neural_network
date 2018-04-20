@@ -109,7 +109,7 @@ class SelfOrganizingMap:
             iter_count = 0
             update_radius= 1
             update_rate = 1
-            for i in range(200):
+            for i in range(500):
             #while True:
                 iter_count += 1
                 update_radius = self.__initial_update_radius*np.exp(-(iter_count/self.__narrowing_constant))
@@ -121,7 +121,7 @@ class SelfOrganizingMap:
                     self.adjust_weights(winner_coordinates, update_radius, update_rate)
                 self.calc_colors()
                 #if not i%10:
-                self.show_grid()
+            #self.show_grid()
 
         def calc_distances(self, sample):
             """Calculates distance from the input vector for every node"""
@@ -172,8 +172,9 @@ class SelfOrganizingMap:
                                                                     self.model.dimensions)]
             colors = np.reshape(colors, [4, 4])
             sns.heatmap(colors)
-            plt.pause(.001)
+            plt.pause(2)
             plt.clf()       # Clears surface of the whole figure so it can be updated in the next iteration
+            plt.close()
 
     class Predictor:
         ''' Contains model reference and method that generates a prediction

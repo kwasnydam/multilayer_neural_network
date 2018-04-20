@@ -3,6 +3,7 @@ from neuron_network import NeuronNetwork
 from self_organizing_map import SelfOrganizingMap
 import Synapse
 import Neroun
+import math
 
 
 class SOM_MLP_Strategy(ModelStrategy):
@@ -25,7 +26,7 @@ class SOM_MLP_Strategy(ModelStrategy):
         self.model.reset()
 
     def set_parameters(self, parameters):
-        self.model.set_parameters()
+        self.model.set_parameters(parameters)
 
     def get_parameters(self):
         return self.model.get_parameters()
@@ -34,6 +35,7 @@ class SOM_MLP_Strategy(ModelStrategy):
 class SOM_MLP_Strategy_Logic():
     MIU = 1
     THRESHOLD = 0.2
+    DELTA_COEFF = 1
 
     def __init__(self):
         """
@@ -158,11 +160,11 @@ class SOM_MLP_Strategy_Logic():
         self.train_network()
 
     def train_network(self):
-        self.trainer = SOM_MLP_Strategy_Logic.Trainer(self, 1024)  #: This object is responsible for training of the network
+        self.trainer = SOM_MLP_Strategy_Logic.Trainer(self, 1000)  #: This object is responsible for training of the network
         self.trainer.train()
 
     def predict(self, features):
-        predictor = NeuronNetwork.Predictor(self, features)
+        predictor = SOM_MLP_Strategy_Logic.Predictor(self, features)
         results = predictor.predict()
         return results
 
@@ -214,6 +216,8 @@ class SOM_MLP_Strategy_Logic():
             self.max_iter = max_iter  # number of training iterations
             self._set_initial_training_parameters()
 
+            self.is_online = True
+
         def _set_initial_training_parameters(self):
             """Zero out the error and set the current iteration to be equal 0"""
             self.error = [0] * self.training_size
@@ -251,7 +255,14 @@ class SOM_MLP_Strategy_Logic():
                     self._caluclate_average_adjustment()
                     self._save_current_error()
                     self._clear_training_process_parameters()
+
+                    #self._adjust_miu()
+
                     self._increase_iteration()
+
+        def _adjust_miu(self):
+            #self.network.miu = self.network.miu*math.exp(-10*self.iteration/self.max_iter)
+            pass
 
         def _train_som(self, features, labels):
             self.network.som.set_input_len(len(features[1,:]))
@@ -294,9 +305,13 @@ class SOM_MLP_Strategy_Logic():
                         adjustment = (-1) * self.network.miu * neuron.delta * (1 - neuron.output) * \
                                      neuron.output * input_synapse.get_value()
                         input_synapse.weight_adjustment.append(adjustment)
+
                         if type(input_synapse.input) is Neroun.Neuron:
-                            delta = neuron.delta * input_synapse.weight * (1 - neuron.output) * neuron.output
+                            delta = neuron.delta * input_synapse.weight * (1 - neuron.output) * neuron.output * SOM_MLP_Strategy_Logic.DELTA_COEFF
                             input_synapse.input.delta += delta
+
+                        if self.is_online:
+                            input_synapse.weight += adjustment
 
         def _is_finish_criterium_met(self):
             """Checks whether the error adjustement is lower then the threshold
@@ -304,8 +319,8 @@ class SOM_MLP_Strategy_Logic():
             :return: True if error adjustement lower then THRESHOLD, false otherwise
             """
             _state = (self.previous_error - (sum(self.error) / len(self.error))) < type(self).THRESHOLD
-            self.previous_error = sum(self.error) / len(self.error)
-            # return _state
+            #self.previous_error = sum(self.error) / len(self.error)
+            #return _state
             return False
 
         def _caluclate_average_adjustment(self):
@@ -332,7 +347,7 @@ class SOM_MLP_Strategy_Logic():
             # print(str(self.iteration))
             self.iteration += 1
 
-    class Predictor():
+    class Predictor:
 
         def __init__(self, model, data):
             self.network = model
@@ -343,7 +358,7 @@ class SOM_MLP_Strategy_Logic():
             for sample in self.data:
                 # Predict output based on the input
                 # added for som
-                self.som.predict(sample)
+                self.network.som.predict(sample)
                 #
 
                 self._connect_inputs(sample)

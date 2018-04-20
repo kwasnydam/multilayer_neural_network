@@ -14,12 +14,12 @@ class TestCrossvalidation(TestCase):
         # self.model.create_network(4, [10, 7, 4, 3])
 
         # self.model = MLPNetwork()
-        # self.model.create(no_of_layers=2, size_of_each_layer=[4, 3])
+        # self.model.create(no_of_layers=4, size_of_each_layer=[4, 10, 7, 3])
 
         self.model = SomMlpNetwork()
-        self.model.create(no_of_layers=2,
-                          size_of_each_layer=[4,3],
-                          som_size=[4,4])
+        self.model.create(no_of_layers=4,
+                          size_of_each_layer=[4,10,7,3],
+                          som_size=[3,3])
 
         self.crossvali = Crossvalidation()
         self.crossvali.set_data(self.data)

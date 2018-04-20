@@ -183,6 +183,8 @@ class NeuronNetwork:
             self.max_iter = max_iter    # number of training iterations
             self._set_initial_training_parameters()
 
+            self.is_online = True
+
         def _set_initial_training_parameters(self):
             """Zero out the error and set the current iteration to be equal 0"""
             self.error = [0]*self.training_size
@@ -250,6 +252,9 @@ class NeuronNetwork:
                         if type(input_synapse.input) is Neroun.Neuron:
                             delta = neuron.delta * input_synapse.weight * (1 - neuron.output) * neuron.output
                             input_synapse.input.delta += delta
+
+                        if self.is_online:
+                            input_synapse.weight += adjustment
 
         def _is_finish_criterium_met(self):
             """Checks whether the error adjustement is lower then the threshold
