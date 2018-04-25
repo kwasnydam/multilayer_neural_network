@@ -4,6 +4,7 @@ from self_organizing_map import SelfOrganizingMap
 import Synapse
 import Neroun
 import math
+import pickle
 
 
 class SOM_MLP_Strategy(ModelStrategy):
@@ -17,7 +18,8 @@ class SOM_MLP_Strategy(ModelStrategy):
     def create(self, **parameters):
         self.model.create(parameters.get('no_of_layers'),
                           parameters.get('size_of_each_layer'),
-                          parameters.get('som_size'))
+                          parameters.get('som_size'),
+                          som_filename=parameters.get('som_filename'))
 
     def predict(self, data):
         return self.model.predict(data)
@@ -89,9 +91,15 @@ class SOM_MLP_Strategy_Logic():
     def training_output(self, data):
         self.__training_output = data
 
-    def create(self, _num_of_layers, _neurons_in_each_layer, som_size):
+    def create(self, _num_of_layers, _neurons_in_each_layer, som_size, som_filename):
         self.create_network(_num_of_layers, _neurons_in_each_layer)
-        self.som = SelfOrganizingMap(som_size)
+        if som_filename is None:
+            self.som = SelfOrganizingMap(som_size)
+        else:
+            with open(som_filename, 'rb') as input:
+                self.som = pickle.load(input)
+                #self.som.show()
+
 
     def create_network(self, _num_of_layers, _neurons_in_each_layer):
         """Creates a network with desired topology. First creates a layers with neurons and then wires them wi
@@ -145,11 +153,16 @@ class SOM_MLP_Strategy_Logic():
                     i_neuron.input_synapses.append(_i_synapse)
 
                 #added for som
+                # for node in self.som.get_element():
+                #     _i_synapse = Synapse.Synapse(_input=node.distance,
+                #                                  _out=i_neuron,
+                #                                  _weight=1,
+                #                                  _mode='data')
+                #     i_neuron.input_synapses.append(_i_synapse)
                 for node in self.som.get_element():
-                    _i_synapse = Synapse.Synapse(_input=node.distance,
+                    _i_synapse = Synapse.Synapse(_input=node,
                                                  _out=i_neuron,
-                                                 _weight=1,
-                                                 _mode='data')
+                                                 _weight=1)
                     i_neuron.input_synapses.append(_i_synapse)
 
         else:
@@ -201,7 +214,7 @@ class SOM_MLP_Strategy_Logic():
         """An inner class that is responsible for the training of Neural Network.
         Performs Backpropagation algorithm to adjust the parameters
         """
-        THRESHOLD = 0.00001
+        THRESHOLD = 0.0000001
 
         def __init__(self, network, max_iter):
             """Creates the Trainer object with reference to the neuron network and a max number of iterations
@@ -223,6 +236,7 @@ class SOM_MLP_Strategy_Logic():
             self.error = [0] * self.training_size
             self.iteration = 0
             self.previous_error = 9999  # Initial error
+            self.network.miu = SOM_MLP_Strategy_Logic.MIU
 
         def train(self):
             """Perform the backpropagation algorithm to train the network. Finish criterium is:
@@ -233,6 +247,8 @@ class SOM_MLP_Strategy_Logic():
             # added for som
             if not self.network.som.is_trained:
                 self._train_som(self.network.training_input, self.network.training_output)
+                self.network.som.save('trained_som')
+                print('SOM trained')
             # trained som
 
             while self.iteration < self.max_iter:
@@ -249,6 +265,7 @@ class SOM_MLP_Strategy_Logic():
                     self._propagate_back()
                 if self._is_finish_criterium_met():
                     # if the error difference in the current iteration is lower then threshol, break cause minimum reached
+                    #self.network.miu = 10*self.network.miu
                     break
                 else:
                     # Else calculate network's parameters' adjustements and restart the state
@@ -261,7 +278,7 @@ class SOM_MLP_Strategy_Logic():
                     self._increase_iteration()
 
         def _adjust_miu(self):
-            #self.network.miu = self.network.miu*math.exp(-10*self.iteration/self.max_iter)
+            self.network.miu = self.network.miu*math.exp(-100*self.iteration/self.max_iter)
             pass
 
         def _train_som(self, features, labels):
@@ -320,8 +337,8 @@ class SOM_MLP_Strategy_Logic():
             """
             _state = (self.previous_error - (sum(self.error) / len(self.error))) < type(self).THRESHOLD
             #self.previous_error = sum(self.error) / len(self.error)
-            #return _state
-            return False
+            return _state
+            #return False
 
         def _caluclate_average_adjustment(self):
             """Average obtained weight adjustements and adjust weights accordingly. Clear list of adjustement for next iteration"""

@@ -4,6 +4,7 @@ import Neroun
 import numpy as np
 import os
 from io import open
+import math
 
 
 class NeuronNetwork:
@@ -163,13 +164,15 @@ class NeuronNetwork:
         # breaking the connection to the inputs (it is reasonable because number of inputs may be different)
         for neuron in self.neuron_layers_list[0]:
             neuron.input_synapses = []
+        # reseting miu
+        self.miu = NeuronNetwork.MIU
 
 
     class Trainer:
         """An inner class that is responsible for the training of Neural Network.
         Performs Backpropagation algorithm to adjust the parameters
         """
-        THRESHOLD = 0.00001
+        THRESHOLD = 0.000001
         def __init__(self, network, max_iter):
             """Creates the Trainer object with reference to the neuron network and a max number of iterations
 
@@ -190,6 +193,7 @@ class NeuronNetwork:
             self.error = [0]*self.training_size
             self.iteration = 0
             self.previous_error = 9999  # Initial error
+            self.network.miu = NeuronNetwork.MIU
 
         def train(self):
             """Perform the backpropagation algorithm to train the network. Finish criterium is:
@@ -213,7 +217,12 @@ class NeuronNetwork:
                     self._caluclate_average_adjustment()
                     self._save_current_error()
                     self._clear_training_process_parameters()
+                    #self._adjust_miu()
                     self._increase_iteration()
+
+        def _adjust_miu(self):
+            self.network.miu = self.network.miu*math.exp(-10*self.iteration/self.max_iter)
+            pass
 
         def _connect_inputs(self, sample):
             """Feed the current input sample to the netowrk"""
@@ -263,8 +272,8 @@ class NeuronNetwork:
             """
             _state = (self.previous_error - (sum(self.error)/len(self.error))) < type(self).THRESHOLD
             self.previous_error = sum(self.error)/len(self.error)
-            #return _state
-            return False
+            return _state
+            #return False
 
         def _caluclate_average_adjustment(self):
             """Average obtained weight adjustements and adjust weights accordingly. Clear list of adjustement for next iteration"""

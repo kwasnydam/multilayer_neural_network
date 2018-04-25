@@ -8,6 +8,7 @@ class SOMNeuron:
     def __init__(self, length=0):
         self.weights = []
         self.distance = 0
+        self.output = self.distance
         self.winners = [0, 0, 0]
         self.color = [0, 0, 0]
         if length != 0:
@@ -28,6 +29,7 @@ class SOMNeuron:
         calc_dist = lambda x, y: np.sqrt(np.sum((x-y)**2))  # Calculate distance
         self.distance = calc_dist(self.weights, inp)
         self.distance_for_weights = input_vector - self.weights
+        self.output = self.distance
         #print('Distance between weights and input is: ' + str(self.distance))
 
     def calculate_color(self):

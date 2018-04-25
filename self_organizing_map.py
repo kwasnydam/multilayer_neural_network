@@ -3,6 +3,7 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pickle
 
 
 class SelfOrganizingMap:
@@ -33,7 +34,7 @@ class SelfOrganizingMap:
         if len(dimensions) == 2:
             map = [[SOMNeuron() for i in range(dimensions[0])] for j in range(dimensions[1])]
         elif len(dimensions) == 3:
-            map = [[[SOMNeuron() for i in range(dimensions[0])] for j in range(dimensions[1])] for k in range(dimensions[3])]
+            map = [[[SOMNeuron() for i in range(dimensions[0])] for j in range(dimensions[1])] for k in range(dimensions[2])]
         else:
             print('Map initilization error')
             return -1
@@ -64,6 +65,12 @@ class SelfOrganizingMap:
             for x, y, z in itertools.product(range(self.dimensions[0]), range(self.dimensions[1]), range(self.dimensions[2])):
                 yield self.map[x, y, z]
 
+    def save(self, filename):
+        with open('{}.pkl'.format(filename), 'wb') as output:
+            pickle.dump(self, output, -1)
+
+    def show(self):
+        self.trainer.show_grid()
 
     class Trainer:
         def __init__(self, model, training_data, labels_for_presentation):
@@ -109,7 +116,7 @@ class SelfOrganizingMap:
             iter_count = 0
             update_radius= 1
             update_rate = 1
-            for i in range(500):
+            for i in range(2000):
             #while True:
                 iter_count += 1
                 update_radius = self.__initial_update_radius*np.exp(-(iter_count/self.__narrowing_constant))
@@ -119,7 +126,7 @@ class SelfOrganizingMap:
                     winner_coordinates = self.find_winner() # works
                     self.model.map[winner_coordinates].winners += label
                     self.adjust_weights(winner_coordinates, update_radius, update_rate)
-                self.calc_colors()
+                #self.calc_colors()
                 #if not i%10:
             #self.show_grid()
 
@@ -170,9 +177,9 @@ class SelfOrganizingMap:
             plt.show()
             colors = [node.color for node in self.__get_map_element(self.model.map,
                                                                     self.model.dimensions)]
-            colors = np.reshape(colors, [4, 4])
+            colors = np.reshape(colors, [int(np.sqrt(len(colors))), int(np.sqrt(len(colors)))])
             sns.heatmap(colors)
-            plt.pause(2)
+            plt.pause(5)
             plt.clf()       # Clears surface of the whole figure so it can be updated in the next iteration
             plt.close()
 

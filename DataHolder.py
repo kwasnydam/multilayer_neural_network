@@ -4,13 +4,18 @@ import numpy as np
 from sklearn.preprocessing import normalize
 
 class DataHolder:
-    def __init__(self, _filename, _number_of_fetures):
+    def __init__(self, _filename, _number_of_fetures, _class_column=-1, _rows_to_skip=0):
         self.rawdata = None
         try:
-            self.rawdata = self.load_data(_filename, _number_of_fetures)
+            self.rawdata = self.load_data(_filename,
+                                          _number_of_fetures,
+                                          _rows_to_skip)
             if self.rawdata is None:
                 raise Exception
             else:
+                self.number_of_features = _number_of_fetures
+                self.class_coulmn = _class_column
+                self.features_columns = self._get_features_indexes()
                 self.shuffled_rawdata = self.rawdata.sample(frac=1)
                 print('Data loaded succesfully!')
                 self.data_loaded_succesfully = True
@@ -21,20 +26,28 @@ class DataHolder:
         except:
             print('Failed to load the data')
 
-    def load_data(self, _filename, _number_of_features):
+    def _get_features_indexes(self):
+        features_indexes = set([x for x in range(len(self.rawdata.iloc[0,:].values))])
+        class_indexes = set([self.class_coulmn])
+
+        features_indexes = features_indexes.difference(class_indexes)
+
+        return list(features_indexes)
+
+    def load_data(self, _filename, _number_of_features, _rows_to_skip):
         try:
             if 'xls' in _filename:
-                self.number_of_features = _number_of_features
+                #self.number_of_features = _number_of_features
                 try:
-                    data = pd.read_excel(_filename, header=None)
+                    data = pd.read_excel(_filename, header=None, skiprows=_rows_to_skip)
                 except FileNotFoundError as e:
                     print('Problem Loading File')
                 else:
                     return data
             elif 'csv' in _filename:
-                self.number_of_features = _number_of_features
+                #self.number_of_features = _number_of_features
                 try:
-                    data = pd.read_csv(_filename, header=None)
+                    data = pd.read_csv(_filename, header=None, skiprows=_rows_to_skip)
                 except FileNotFoundError as e:
                     print('Problem Loading File')
                 else:
@@ -47,7 +60,9 @@ class DataHolder:
             print("we are still running bois")
 
     def set_features(self):
-        self.features = self.shuffled_rawdata.iloc[1:, 0:self.number_of_features].values
+        #self.features = self.shuffled_rawdata.iloc[1:, 0:self.number_of_features].values
+        self.features = self.shuffled_rawdata.iloc[:, self.features_columns].values
+
         pass
 
     def get_features(self):
@@ -58,7 +73,8 @@ class DataHolder:
 
 
     def set_labels(self):
-        self.labels = self.shuffled_rawdata.iloc[1:, -1].values  # Takes last column of input data as labels
+        #self.labels = self.shuffled_rawdata.iloc[1:, -1].values  # Takes last column of input data as labels
+        self.labels = self.shuffled_rawdata.iloc[:, self.class_coulmn].values  # Takes last column of input data as labels
         #self.labels = np.reshape(labels, (-1, 1))           # Reshapes it to be the coulmn vector
         pass
 

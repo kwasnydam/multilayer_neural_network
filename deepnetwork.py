@@ -14,7 +14,8 @@ class DeepNetwork(object):
     def create(self, **parameters):
         self._model_strategy.create(no_of_layers=parameters['no_of_layers'],
                                     size_of_each_layer=parameters['size_of_each_layer'],
-                                    som_size=parameters.get('som_size'))
+                                    som_size=parameters.get('som_size'),
+                                    som_filename=parameters.get('som_filename'))
 
     def train(self, training_features, training_labels):
         self._model_strategy.train(training_features, training_labels)
